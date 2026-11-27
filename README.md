@@ -88,14 +88,6 @@ For the desktop file-device checks, see the `File device tests` step in
 `.github/workflows/ci.yml` for the commands and temporary working
 directory setup.
 
-## Fall 2026 showcase materials
-
-Draft recording scripts, poster and slide files, source/AI disclosure,
-and submission checklist are in
-[`docs/showcase/`](docs/showcase/README.md). Fill in confirmed team and
-sponsor information and complete the external recording and upload steps
-before treating them as final submissions.
-
 Contracts are checked at runtime in every build (`-gnata`).
 
 ## Rules of the road
