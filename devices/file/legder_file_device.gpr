@@ -2,8 +2,13 @@ with "../../legder";
 
 project Legder_File_Device is
 
+   for Languages use ("Ada", "C");
    for Source_Dirs use (".");
    for Object_Dir use "obj";
+   for Exec_Dir use "bin";
+   for Create_Missing_Dirs use "True";
+   for Main use
+     ("file_device_showcase.adb", "file_device_test.adb");
 
    package Compiler is
       for Default_Switches ("Ada") use

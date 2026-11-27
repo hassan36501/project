@@ -37,12 +37,20 @@ jobs:
           alr -n build
           alr -n run
 
-      - name: File device demo and crash test
+      - name: File device tests
         run: |
           cd devices/file
-          alr -n exec -- gprbuild -P legder_file_device.gpr
-          ./bin/file_demo
-          bash ./crash_test.sh
+          alr -n exec -- gprbuild -P file_device_test.gpr
+          alr -n exec -- gprbuild -P file_device_showcase.gpr
+
+          device_dir="$PWD"
+          temp_dir="$(mktemp -d)"
+          trap 'rm -rf "$temp_dir"' EXIT
+          cd "$temp_dir"
+
+          "$device_dir/test_bin/file_device_test"
+          "$device_dir/showcase_bin/file_device_showcase"
+          "$device_dir/showcase_bin/file_device_showcase"
 
       - name: Install GNATprove
         run: |

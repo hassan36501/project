@@ -2,6 +2,8 @@ with "../../legder";
 
 project File_Device_Showcase is
 
+   for Languages use ("Ada", "C");
+
    for Source_Dirs use (".");
    for Object_Dir use "showcase_obj";
    for Exec_Dir use "showcase_bin";
