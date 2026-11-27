@@ -7,6 +7,7 @@ on:
 jobs:
   build-test-prove:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -39,8 +40,8 @@ jobs:
       - name: File device demo and crash test
         run: |
           cd devices/file
-          alr -n build
-          ./bin/file_demo.exe
+          alr -n exec -- gprbuild -P legder_file_device.gpr
+          ./bin/file_demo
           bash ./crash_test.sh
 
       - name: Install GNATprove
