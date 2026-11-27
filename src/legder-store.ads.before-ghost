@@ -1,0 +1,72 @@
+--  The store: a bounded key-value map, durable through Legder.Log.
+--
+--  The in-memory table maintains live entries in sorted key order.
+--  Get uses binary search, while Put and Delete maintain the
+--  sorted array.
+--
+--  Put and Delete commit to the log before updating the table.
+--  Open replays the log to rebuild the in-memory table.
+--
+--  PROOF TARGETS
+--    S1: After Open, Get returns the latest committed value for
+--        each key, or reports it absent after Delete.
+--    S2: The table changes only after a successful log append.
+--    S3: The table never overflows. A new key cannot be inserted
+--        into a full table.
+--
+--  The formal SPARK ghost model and proofs must establish S1,
+--  S2 and S3 for Open, Put and Delete.
+
+with Legder.Log;
+
+generic
+   Block_Count : Block_Index;
+   with procedure Read  (Index : Block_Index; Data : out Block);
+   with procedure Write (Index : Block_Index; Data : Block);
+   with procedure Sync;
+package Legder.Store with SPARK_Mode is
+
+   Max_Entries : constant := 256;
+   --  Live keys the table can hold. Bounded; a full table refuses new
+   --  keys rather than allocating.
+
+   type Store is limited private;
+
+   procedure Open (S : out Store; Replayed : out Natural);
+   --  Recovers from the device. Replayed is the number of committed
+   --  records found and applied.
+
+   procedure Put (S : in out Store; K : Key; V : Value; Success : out Boolean);
+   --  Durable on return with Success. False when the log is full or
+   --  the table is full and K is new.
+
+   procedure Delete (S : in out Store; K : Key; Success : out Boolean);
+   --  Durable on return with Success. Deleting an absent key is a
+   --  successful no-op that still writes a record (simplest correct
+   --  behaviour; optimising it away is fine once S1 is proved).
+
+   procedure Get (S : Store; K : Key; V : out Value; Found : out Boolean);
+
+   function Count (S : Store) return Natural;
+   --  Live keys.
+
+private
+
+   type Entry_Rec is record
+      Live : Boolean := False;
+      K    : Key;
+      V    : Value;
+   end record;
+
+   type Entry_Index is range 1 .. Max_Entries;
+   type Entry_Array is array (Entry_Index) of Entry_Rec;
+
+   package L is new Legder.Log (Block_Count, Read, Write, Sync);
+
+   type Store is limited record
+      Log   : L.State;
+      Table : Entry_Array;
+      Live  : Natural := 0;
+   end record;
+
+end Legder.Store;

@@ -1,0 +1,127 @@
+--  The store: a bounded key-value map, durable through Legder.Log.
+--
+--  The in-memory table maintains live entries in sorted key order.
+--  Get uses binary search, while Put and Delete maintain the
+--  sorted array.
+--
+--  Put and Delete commit to the log before updating the table.
+--  Open replays the log to rebuild the in-memory table.
+--
+--  PROOF TARGETS
+--    S1: After Open, Get returns the latest committed value for
+--        each key, or reports it absent after Delete.
+--    S2: The table changes only after a successful log append.
+--    S3: The table never overflows. A new key cannot be inserted
+--        into a full table.
+--
+--  The formal SPARK ghost model and proofs must establish S1,
+--  S2 and S3 for Open, Put and Delete.
+
+with Legder.Log;
+
+generic
+   Block_Count : Block_Index;
+   with procedure Read  (Index : Block_Index; Data : out Block);
+   with procedure Write (Index : Block_Index; Data : Block);
+   with procedure Sync;
+package Legder.Store with SPARK_Mode is
+   pragma Unevaluated_Use_Of_Old (Allow);
+
+   Max_Entries : constant := 256;
+
+   --  Live keys the table can hold. Bounded; a full table refuses new
+   --  keys rather than allocating.
+   type Store is limited private;
+
+   --  Ghost view of the store's logical contents.
+   type Model_Entry is record
+      Present : Boolean := False;
+      K       : Key;
+      V       : Value;
+   end record;
+
+   type Model_Array is array (1 .. Max_Entries) of Model_Entry;
+
+   function Model_Of (S : Store) return Model_Array
+     with Ghost;
+
+   function Model_Equal
+     (Left, Right : Model_Array) return Boolean
+     with Ghost;
+
+   function Model_Contains
+     (M : Model_Array;
+      K : Key) return Boolean
+     with Ghost;
+
+   function Model_Value
+     (M : Model_Array;
+      K : Key) return Value
+     with
+       Ghost,
+       Pre => Model_Contains (M, K);
+
+   procedure Open (S : out Store; Replayed : out Natural);
+   --  Recovers from the device. Replayed is the number of committed
+   --  records found and applied.
+
+   procedure Put
+     (S       : in out Store;
+      K       : Key;
+      V       : Value;
+      Success : out Boolean)
+   with
+     Post =>
+       (if not Success then
+           Model_Equal (Model_Of (S), Model_Of (S)'Old)
+        else
+           Model_Contains (Model_Of (S), K)
+           and then Model_Value (Model_Of (S), K) = V);
+   --  Durable on return with Success. False when the log is full or
+   --  the table is full and K is new. A failed Put preserves the model.
+
+   procedure Delete
+     (S       : in out Store;
+      K       : Key;
+      Success : out Boolean)
+   with
+     Post =>
+       (if not Success then
+           Model_Equal (Model_Of (S), Model_Of (S)'Old)
+        else
+           not Model_Contains (Model_Of (S), K));
+   --  Durable on return with Success. Deleting an absent key is a
+   --  successful no-op that still writes a record. A failed Delete
+   --  preserves the model.
+
+   procedure Get
+     (S     : Store;
+      K     : Key;
+      V     : out Value;
+      Found : out Boolean);
+
+   function Count (S : Store) return Natural;
+   --  Live keys.
+
+private
+
+   type Entry_Rec is record
+      Live : Boolean := False;
+      K    : Key;
+      V    : Value;
+   end record;
+
+   type Entry_Index is range 1 .. Max_Entries;
+   type Entry_Array is array (Entry_Index) of Entry_Rec;
+
+   package L is new Legder.Log (Block_Count, Read, Write, Sync);
+
+   subtype Live_Count is Natural range 0 .. Max_Entries;
+
+   type Store is limited record
+      Log   : L.State;
+      Table : Entry_Array;
+      Live  : Live_Count := 0;
+   end record;
+
+end Legder.Store;

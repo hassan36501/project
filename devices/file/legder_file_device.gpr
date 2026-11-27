@@ -1,0 +1,13 @@
+with "../../legder";
+
+project Legder_File_Device is
+
+   for Source_Dirs use (".");
+   for Object_Dir use "obj";
+
+   package Compiler is
+      for Default_Switches ("Ada") use
+        ("-gnat2022", "-gnatwa", "-gnatwe");
+   end Compiler;
+
+end Legder_File_Device;

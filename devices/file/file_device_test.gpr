@@ -1,0 +1,15 @@
+with "../../legder";
+
+project File_Device_Test is
+
+   for Source_Dirs use (".");
+   for Object_Dir use "test_obj";
+   for Exec_Dir use "test_bin";
+   for Main use ("file_device_test.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use
+        ("-gnat2022", "-gnatwa", "-gnatwe");
+   end Compiler;
+
+end File_Device_Test;

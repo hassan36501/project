@@ -1,0 +1,16 @@
+with "../../legder";
+
+project File_Device_Showcase is
+
+   for Source_Dirs use (".");
+   for Object_Dir use "showcase_obj";
+   for Exec_Dir use "showcase_bin";
+   for Create_Missing_Dirs use "True";
+   for Main use ("file_device_showcase.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use
+        ("-gnat2022", "-gnata", "-gnatwa", "-gnatwe");
+   end Compiler;
+
+end File_Device_Showcase;
