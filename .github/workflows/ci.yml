@@ -40,7 +40,7 @@ jobs:
         run: |
           cd devices/file
           alr -n build
-          ./bin/file_demo
+          ./bin/file_demo.exe
           bash ./crash_test.sh
 
       - name: Install GNATprove
