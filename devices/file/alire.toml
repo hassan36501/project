@@ -1,0 +1,14 @@
+name = "legder_file_demo"
+description = "File-backed block device, smoke test, and crash test for legder"
+version = "0.1.0-dev"
+authors = ["Legder Team"]
+licenses = "Apache-2.0"
+
+executables = ["file_demo", "crash_writer"]
+project-files = ["legder_file_demo.gpr"]
+
+[[depends-on]]
+legder = "*"
+
+[[pins]]
+legder = { path = "../.." }
