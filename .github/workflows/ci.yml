@@ -53,4 +53,4 @@ jobs:
           "$device_dir/showcase_bin/file_device_showcase"
 
       - name: SPARK flow analysis
-        run: alr -n gnatprove --mode=flow --checks-as-errors=on
+        run: alr -n -v gnatprove --mode=flow --checks-as-errors=on --verbose
