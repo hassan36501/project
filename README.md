@@ -88,6 +88,14 @@ For the desktop file-device checks, see the `File device tests` step in
 `.github/workflows/ci.yml` for the commands and temporary working
 directory setup.
 
+## Fall 2026 showcase package
+
+Recording scripts, poster and slides, contribution worksheet, AI/source
+disclosure, and submission checklist are in
+[`docs/showcase/`](docs/showcase/README.md). The PDF files and
+`Legder-Showcase-Pack.zip` are drafts: replace confirmed team/sponsor
+details and verify external uploads before submitting.
+
 Contracts are checked at runtime in every build (`-gnata`).
 
 ## Rules of the road
