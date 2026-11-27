@@ -7,6 +7,7 @@ with Legder.File_Device;
 
 procedure File_Device_Test is
    use type Legder.Byte_Array;
+   use type Legder.Block_Index;
 
    Raised : Boolean := False;
 
