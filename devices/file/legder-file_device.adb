@@ -9,6 +9,7 @@ package body Legder.File_Device with SPARK_Mode => Off is
 
    package Block_IO is new Ada.Direct_IO (Legder.Block);
    use type Block_IO.Count;
+   use type Interfaces.C.int;
    use type Interfaces.C.Strings.chars_ptr;
 
    use Ada.Strings.Unbounded;
