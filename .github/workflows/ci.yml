@@ -10,19 +10,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: alire-project/setup-alire@v4
+
       - name: Build library
         run: alr -n build
+
       - name: Tests
         run: |
           cd tests
           alr -n build
           ./bin/tests
+
       - name: Showcase (write, crash, recover)
         run: |
           cd showcase
           alr -n build
           alr -n run
+
       - name: SPARK flow analysis
         run: |
-          alr -n with gnatprove
           alr -n exec -- gnatprove -P legder.gpr --mode=flow --checks-as-errors=on
