@@ -14,7 +14,8 @@ Legder.Record_Format  one block <-> one record, CRC           pure
 Legder              Byte, Block, Key, Value, Sequence, CRC    pure
      |
 device              Read (Index, out Block) / Write (Index, Block) / Sync
-                    Legder.RAM_Device in the seed; file, SD, flash are milestones
+                    Legder.RAM_Device and Legder.File_Device (desktop);
+                    board-specific SD/flash device is future work
 ```
 
 The device is three generic formal subprograms, not a tagged type.
@@ -76,8 +77,9 @@ the table cannot take the key (S3), else `Append`, and only on success
 `Apply` the record to the table. `Open`: `Log.Open` then `Scan` with
 `Apply` as the visitor. One `Apply` for both live updates and replay.
 
-The index (linear scan) is the placeholder. Replace it; keep the
-commit order.
+The in-memory table is a sorted fixed-size array. Lookup uses binary
+search; updates maintain sorted order. This improves lookup over the
+original linear scan but does not change the log commit order.
 
 ## RAM device and fault injection
 
@@ -90,16 +92,14 @@ device is expected to behave at least this well; if it does not (flash
 without a write-complete guarantee, an SD card that lies about sync),
 a translation layer underneath is the fix, not a weaker log.
 
-## Proof plan
+## Proof status
 
-- R2 (record index safety): free with SPARK, all offsets are constants.
-- R1 (round trip): needs a lemma per field; doable.
-- L1 (scan stops at the first gap): loop invariant over the prefix.
-- L2, L3: need a ghost model of the device (an array of blocks plus a
-  "durable" flag); write it in the tests first as executable ghost
-  code, then lift.
-- S1 (store meaning): a ghost functional map `Model (S)`, with
-  `Put`/`Delete`/`Open` postconditions stated on it. This is the goal.
+The CI workflow runs GNATprove in `--mode=flow`. That checks flow
+properties but does not establish the deductive proof milestones listed
+in the project plan. The latest recorded CI run and the status of R1,
+R2, L1, L2/L3, and S1 are in [`docs/proof-status.md`](docs/proof-status.md).
+Do not mark an obligation proved without retaining the corresponding
+GNATprove result.
 
 ## What is deliberately not here
 

@@ -28,41 +28,48 @@ The mechanism:
 - Put and Delete write the record and sync *before* touching the
   in-memory table. The table is always a replay of the log.
 
-## What is in the seed
+## Implemented components and current limits
 
 ```
 src/legder.ads                Byte, Block, Key, Value, Sequence, CRC          done
 src/legder-record_format.ads  the on-disk record, Encode/Decode with CRC     done
 src/legder-log.ads            generic WAL: Open (recover), Append, Scan      done
-src/legder-store.ads          generic KV store on the log                    done, PLACEHOLDER index
+src/legder-store.ads          generic KV store on the log                    implemented; sorted-array index
 src/legder-ram_device.ads     in-memory device with crash injection          done
-showcase/                     write, tear a block, recover, check            acceptance test
-tests/                        30 checks incl. CRC vectors and crash cases    extend as you go
+devices/file/                 file-backed block device and test/showcase     implemented
+showcase/                     RAM-device write, crash, and recovery demo      implemented
+tests/                        record, log, store, index, and model tests       implemented
 ```
 
-Everything compiles, the crash tests pass, and recovery works. What is
-a placeholder is the store's index: a linear scan over a 256-entry
-array. Correct and slow. What is missing entirely is compaction: the
-log only grows, and when the device is full, Put fails.
+The store uses a sorted fixed-size array with binary-search lookup. The
+log is append-only and has no compaction: once its device is full, an
+append fails. The file device is a desktop implementation; this
+repository does not currently include a board-specific device or a
+hardware power-loss demonstration. The RAM crash simulator and the
+file-device tests cover different scenarios and should not be treated
+as proof of physical-device durability.
+
+The current CI workflow builds the library, runs the test and showcase
+programs, runs file-device tests, installs GNATprove, and runs SPARK
+flow analysis. A successful flow analysis does not mean that the
+deductive proof milestones R1, R2, L1, or S1 have been discharged. See
+[`docs/proof-status.md`](docs/proof-status.md) for the recorded status
+and required follow-up.
 
 Read `ARCHITECTURE.md` before touching anything.
 
-## Milestones
+## Development goals
 
-1. **Prove the record format.** `Legder.Record_Format` under
+1. **Prove the record format.** Run `Legder.Record_Format` under
    `gnatprove --mode=all`: index safety (R2) and, if you can, the
    round trip (R1). First real proof, small package.
-2. **A real device.** Implement Read/Write/Sync over a file on the
-   desktop, then over SD or flash on a board. Run the showcase on it.
-   Pull the plug on a real board mid-write. Recover.
-3. **Compaction.** When the log is nearly full, write the live table
-   as a fresh sequence of records into a second region and switch.
-   This is where the crash-safety argument gets interesting: the
-   switch itself must be atomic.
-4. **A real index.** Replace the linear scan. Sorted array with binary
-   search is enough; a B-tree is a stretch. Do not change the commit
-   order while doing this.
-5. **Prove S1.** State the store's meaning as a ghost functional map
+2. **Hardware device.** Implement Read/Write/Sync over a selected SD or
+   flash target and demonstrate recovery on that hardware. The desktop
+   file device exists; the hardware target remains future work.
+3. **Compaction.** The design is documented in
+   [`docs/compaction-design.md`](docs/compaction-design.md), but the
+   implementation is future work and is not part of the current scope.
+4. **Prove S1.** State the store's meaning as a ghost functional map
    and prove Put, Delete and Open against it. The year's headline.
 
 ## Build
@@ -76,6 +83,10 @@ cd showcase && alr build && alr run
 cd tests && alr build && ./bin/tests
 alr with gnatprove && alr exec -- gnatprove -P legder.gpr --mode=flow
 ```
+
+For the desktop file-device checks, see the `File device tests` step in
+`.github/workflows/ci.yml` for the commands and temporary working
+directory setup.
 
 Contracts are checked at runtime in every build (`-gnata`).
 
