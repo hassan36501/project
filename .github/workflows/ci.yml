@@ -52,11 +52,8 @@ jobs:
           "$device_dir/showcase_bin/file_device_showcase"
           "$device_dir/showcase_bin/file_device_showcase"
 
-      - name: Install GNATprove
-        run: |
-          alr -n install gnatprove^16.1.0
-          echo "$HOME/.alire/bin" >> "$GITHUB_PATH"
+      - name: Check GNATprove availability
+        run: alr -n exec -- gnatprove --version
 
       - name: SPARK flow analysis
-        run: |
-          gnatprove -P legder.gpr --mode=flow --checks-as-errors=on
+        run: alr -n exec -- gnatprove -P legder.gpr --mode=flow --checks-as-errors=on
