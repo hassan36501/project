@@ -11,11 +11,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: alire-project/setup-alire@v4
 
-      - name: Update Alire index
-        run: alr index --update-all
-
       - name: Show Alire version
         run: alr --version
+
+      - name: Resolve dependencies
+        run: alr -n update
 
       - name: Build library
         run: alr -n build
@@ -34,4 +34,5 @@ jobs:
 
       - name: SPARK flow analysis
         run: |
+          alr -n exec -- which gnatprove
           alr -n exec -- gnatprove -P legder.gpr --mode=flow --checks-as-errors=on
